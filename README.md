@@ -1,11 +1,10 @@
 # arruaseiros_do_fundo
 # Citizen Assist AI — Módulo de Energias Renováveis e Sustentáveis
 
-*Disciplina:* Soluções em Energias Renováveis e Sustentáveis (1CC)  
-*Integrantes do Grupo:*  
-- [Nome Completo 1] — RM: [000000]  
-- [Nome Completo 2] — RM: [000000]  
-- [Nome Completo 3] — RM: [000000]  
+*Disciplina:* Soluções em Energias Renováveis e Sustentáveis 
+-Gabriel RM:571583
+- Rafael Sá RM:569223
+-João Melo RM:571116
 
 ---
 
@@ -81,6 +80,14 @@ Foram realizados testes de compreensão e utilidade com 3 perfis de usuários (d
 | *Usuário C* (Estudante, 2 pessoas) | "Queria saber quanto tempo demora para recuperar o dinheiro do painel solar." | Exibição explícita do tempo de retorno do investimento (payback em meses/anos) junto com o custo inicial estimado. |
 
 ---
+
+ANEEL (Agência Nacional de Energia Elétrica): Ranking de Tarifas Residenciais e Sistema de Bandeiras Tarifárias. Disponível em: https://www.gov.br/aneel
+
+EPE / PROCEL (Empresa de Pesquisa Energética): Pesquisa de Posse e Hábitos de Uso de Equipamentos Elétricos na Classe Residencial (PPH). Disponível em: https://www.epe.gov.br
+
+INMETRO: Tabela de Consumo e Eficiência Energética — Chuveiros Elétricos (Programa Brasileiro de Etiquetagem). Disponível em: https://www.gov.br/inmetro
+
+MCTI (Ministério da Ciência, Tecnologia e Inovação): Fatores de Emissão de CO₂ do Sistema Interligado Nacional (SIN). Disponível em: https://www.gov.br/mcti
 
 ## 7. Como Executar o Projeto
 
