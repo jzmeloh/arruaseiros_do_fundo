@@ -176,5 +176,5 @@ def iniciar_chat():
     except ValueError:
         print("Erro: Por favor, insira apenas valores numéricos válidos.")
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     iniciar_chat()
