@@ -1,10 +1,57 @@
 import json
 import os
 
+DADOS_PADRAO = {
+    "metadata": {
+        "modulo": "Citizen Assist AI - Energias Renováveis e Sustentáveis",
+        "versao": "1.0",
+        "periodo_referencia_dias": 30,
+        "tarifa_media_kwh_brl": 0.85,
+        "fator_emissao_co2_kg_kwh": 0.055,
+        "equivalencia_co2_km_carro": 0.14
+    },
+    "alternativas": {
+        "eficiencia_energetica": {
+            "nome": "Chuveiro Eletrônico + Redução de 20% no Tempo de Banho",
+            "tipo": "Eficiência Energética (Otimização de Consumo)",
+            "potencia_media_kw": 3.5,
+            "fator_reducao_tempo": 0.80,
+            "custo_implantacao_brl": 160.00,
+            "viabilidade": "Alta — instalação simples em qualquer residência ou apartamento sem obras.",
+            "limitacoes": "Depende da disciplina dos moradores em reduzir o tempo de banho e ajustar a temperatura gradualmente."
+        },
+        "fonte_renovavel_solar": {
+            "nome": "Aquecedor Solar de Água Residencial (Coletor Térmico + Apoio Elétrico)",
+            "tipo": "Fonte Renovável (Energia Solar Térmica)",
+            "fracao_solar_media": 0.75,
+            "custo_implantacao_brl": 2800.00,
+            "viabilidade": "Média — requer casa própria com telhado/laje ensolarada e espaço para reservatório térmico.",
+            "limitacoes": "Custo inicial elevado; em períodos nublados ou chuvosos prolongados, o sistema aciona o apoio elétrico (estimado em 25% do consumo)."
+        }
+    },
+    "referencias": [
+        "ANEEL - Tarifas Residenciais Médias e Bandeiras Tarifárias (gov.br/aneel)",
+        "EPE / PROCEL - Pesquisa de Posse e Hábitos de Uso de Equipamentos Elétricos (epe.gov.br)",
+        "INMETRO - Programa Brasileiro de Etiquetagem para Chuveiros Elétricos (gov.br/inmetro)",
+        "MCTI - Fatores de Emissão de CO2 do Sistema Interligado Nacional (gov.br/mcti)"
+    ],
+    "aviso_legal": "Os valores apresentados são estimativas técnicas baseadas em médias nacionais (tarifa de R$ 0,85/kWh e 30 dias/mês). Resultados reais variam conforme a concessionária local, bandeira tarifária, irradiação solar da região e hábitos de uso."
+}
+
 def carregar_dados(caminho="dados_energia.json"):
-    base_dir = os.path.dirname(os.path.abspath(_file_))
-    with open(os.path.join(base_dir, caminho), "r", encoding="utf-8") as f:
-        return json.load(f)
+    caminhos_possiveis = [caminho]
+    try:
+        base_dir = os.path.dirname(os.path.abspath(_file_))
+        caminhos_possiveis.insert(0, os.path.join(base_dir, caminho))
+    except NameError:
+        pass
+
+    for arq in caminhos_possiveis:
+        if os.path.exists(arq):
+            with open(arq, "r", encoding="utf-8") as f:
+                return json.load(f)
+
+    return DADOS_PADRAO
 
 def calcular_diagnostico(pessoas, minutos_banho, potencia_watts, moradia, dados):
     meta = dados["metadata"]
