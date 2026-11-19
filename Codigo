@@ -1,0 +1,133 @@
+import json
+import os
+
+def carregar_dados(caminho="dados_energia.json"):
+    base_dir = os.path.dirname(os.path.abspath(_file_))
+    with open(os.path.join(base_dir, caminho), "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def calcular_diagnostico(pessoas, minutos_banho, potencia_watts, moradia, dados):
+    meta = dados["metadata"]
+    alt_efic = dados["alternativas"]["eficiencia_energetica"]
+    alt_solar = dados["alternativas"]["fonte_renovavel_solar"]
+
+    tarifa = meta["tarifa_media_kwh_brl"]
+    fator_co2 = meta["fator_emissao_co2_kg_kwh"]
+    dias = meta["periodo_referencia_dias"]
+
+    # 1. Cenário Atual
+    potencia_kw = potencia_watts / 1000.0
+    horas_mes_atual = (pessoas * minutos_banho * dias) / 60.0
+    kwh_atual = potencia_kw * horas_mes_atual
+    custo_atual = kwh_atual * tarifa
+    co2_atual = kwh_atual * fator_co2
+
+    # 2. Alternativa 1: Eficiência Energética
+    horas_mes_efic = horas_mes_atual * alt_efic["fator_reducao_tempo"]
+    kwh_efic = alt_efic["potencia_media_kw"] * horas_mes_efic
+    custo_efic = kwh_efic * tarifa
+    economia_brl_efic = custo_atual - custo_efic
+    payback_efic = (
+        alt_efic["custo_implantacao_brl"] / economia_brl_efic
+        if economia_brl_efic > 0 else 0
+    )
+    co2_evitado_efic = (kwh_atual - kwh_efic) * fator_co2
+
+    # 3. Alternativa 2: Fonte Renovável (Aquecedor Solar Térmico)
+    kwh_solar = kwh_atual * (1 - alt_solar["fracao_solar_media"])
+    custo_solar = kwh_solar * tarifa
+    economia_brl_solar = custo_atual - custo_solar
+    payback_solar = (
+        alt_solar["custo_implantacao_brl"] / economia_brl_solar
+        if economia_brl_solar > 0 else 0
+    )
+    co2_evitado_solar = (kwh_atual - kwh_solar) * fator_co2
+
+    return {
+        "atual": {"kwh": kwh_atual, "custo": custo_atual, "co2": co2_atual},
+        "eficiencia": {
+            "kwh": kwh_efic,
+            "custo": custo_efic,
+            "economia_brl": economia_brl_efic,
+            "investimento": alt_efic["custo_implantacao_brl"],
+            "payback_meses": payback_efic,
+            "co2_evitado": co2_evitado_efic,
+            "km_carro_evitados": co2_evitado_efic / meta["equivalencia_co2_km_carro"]
+        },
+        "solar": {
+            "kwh": kwh_solar,
+            "custo": custo_solar,
+            "economia_brl": economia_brl_solar,
+            "investimento": alt_solar["custo_implantacao_brl"],
+            "payback_meses": payback_solar,
+            "co2_evitado": co2_evitado_solar,
+            "km_carro_evitados": co2_evitado_solar / meta["equivalencia_co2_km_carro"]
+        },
+        "moradia": moradia
+    }
+
+def exibir_resposta_assistente(res, dados):
+    print("\n" + "=" * 65)
+    print("🤖 CITIZEN ASSIST AI — ORIENTAÇÃO DE ENERGIA E SUSTENTABILIDADE")
+    print("=" * 65)
+
+    atual = res["atual"]
+    efic = res["eficiencia"]
+    solar = res["solar"]
+
+    print(f"\n📊 DIAGNÓSTICO DO SEU CONSUMO ATUAL (BANHO):")
+    print(f"   • Consumo estimado: {atual['kwh']:.1f} kWh/mês")
+    print(f"   • Impacto na conta de luz: R$ {atual['custo']:.2f}/mês (R$ {atual['custo']*12:.2f}/ano)")
+    print(f"   • Pegada de carbono: {atual['co2']:.2f} kg de CO₂/mês")
+
+    print(f"\n💡 ALTERNATIVA 1: EFICIÊNCIA ENERGÉTICA (Chuveiro Eletrônico + Banho Consciente)")
+    print(f"   • Novo consumo: {efic['kwh']:.1f} kWh/mês | Novo custo: R$ {efic['custo']:.2f}/mês")
+    print(f"   • Economia estimada: R$ {efic['economia_brl']:.2f}/mês (R$ {efic['economia_brl']*12:.2f}/ano)")
+    print(f"   • Investimento inicial: R$ {efic['investimento']:.2f} (Retorno em ~{efic['payback_meses']:.1f} meses)")
+    print(f"   • Impacto ambiental: Evita {efic['co2_evitado']:.2f} kg CO₂/mês (~{efic['km_carro_evitados']:.0f} km não rodados de carro)")
+
+    print(f"\n☀️ ALTERNATIVA 2: FONTE RENOVÁVEL (Aquecedor Solar Térmico)")
+    print(f"   • Novo consumo elétrico: {solar['kwh']:.1f} kWh/mês | Novo custo: R$ {solar['custo']:.2f}/mês")
+    print(f"   • Economia estimada: R$ {solar['economia_brl']:.2f}/mês (R$ {solar['economia_brl']*12:.2f}/ano)")
+    print(f"   • Investimento inicial: R$ {solar['investimento']:.2f} (Retorno em ~{solar['payback_meses']:.1f} meses)")
+    print(f"   • Impacto ambiental: Evita {solar['co2_evitado']:.2f} kg CO₂/mês (~{solar['km_carro_evitados']:.0f} km não rodados de carro)")
+
+    print("\n🎯 RECOMENDAÇÃO PERSONALIZADA DO ASSISTENTE:")
+    if res["moradia"] == "1":
+        print("   Como você mora em CASA PRÓPRIA, ambas as opções são viáveis:")
+        print("   → Curto prazo (baixo orçamento): Adote a Alternativa 1 para economia imediata.")
+        print("   → Médio/longo prazo (maior sustentabilidade): Invista no Aquecedor Solar (Alternativa 2),")
+        print("     que corta até 75% do gasto com banho usando energia limpa e renovável.")
+    else:
+        print("   Como você mora em APARTAMENTO OU IMÓVEL ALUGADO, a instalação de placas solares")
+        print("   individuais costuma ser inviável por regras condominiais ou estruturais.")
+        print("   → Melhor escolha: Alternativa 1 (Chuveiro Eletrônico + redução de tempo), que não exige")
+        print("     obras e se paga em poucos meses.")
+
+    print("\n⚠️ CONDIÇÕES E LIMITAÇÕES:")
+    print(f"   {dados['aviso_legal']}")
+
+    print("\n📚 FONTES VERIFICÁVEIS:")
+    for ref in dados["referencias"]:
+        print(f"   - {ref}")
+    print("=" * 65 + "\n")
+
+def iniciar_chat():
+    dados = carregar_dados()
+    print("Olá! Sou o Citizen Assist AI. Vou ajudar você a reduzir o gasto com energia no banho.\n")
+    try:
+        pessoas = int(input("1. Quantas pessoas moram na residência? (Ex: 4): ") or 4)
+        minutos = float(input("2. Qual a duração média de cada banho em minutos? (Ex: 10): ") or 10)
+        potencia = float(input("3. Qual a potência do seu chuveiro atual em Watts? (Ex: 5500): ") or 5500)
+        print("4. Qual o tipo da sua moradia?")
+        print("   [1] Casa própria (com acesso ao telhado/laje)")
+        print("   [2] Apartamento ou imóvel alugado")
+        moradia = input("   Escolha (1 ou 2): ").strip() or "1"
+
+        resultado = calcular_diagnostico(pessoas, minutos, potencia, moradia, dados)
+        exibir_resposta_assistente(resultado, dados)
+    except ValueError:
+        print("Erro: Por favor, insira apenas valores numéricos válidos.")
+
+if _name_ == "_main_":
+    iniciar_chat()
